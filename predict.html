@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="zh-Hant" data-conv="tw">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>預測指揮中心 · Qwen4-Max 判斷大腦</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg0:#070b14;--bg1:#0c1220;--bg2:#121a2e;--bg3:#1a2440;--line:#22304f;--line2:#2e3f66;--ink:#f3efe6;--mut:#93a1c4;--dim:#5d6b8f;--red:#ff3b5c;--green:#00d68f;--gold:#ffb020;--blue:#3d9bff;--cyan:#22d3ee;--mag:#d946ef;--vio:#8b5cf6;--gain:var(--red);--loss:var(--green);--navh:64px;--r:16px;--sans:"Noto Sans TC",system-ui,"Microsoft JhengHei",sans-serif;--disp:"Space Grotesk","Noto Sans TC",sans-serif;--mono:"IBM Plex Mono",ui-monospace,Consolas,monospace}
+html[data-conv="intl"]{--gain:var(--green);--loss:var(--red)}
+*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{background:var(--bg0);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6;overflow-x:hidden}
+::selection{background:rgba(61,155,255,.35)}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-track{background:var(--bg1)}
+::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--blue),var(--mag));border-radius:8px;border:2px solid var(--bg1)}
+*{scrollbar-width:thin;scrollbar-color:var(--blue) var(--bg1)}
+a{color:var(--blue);text-decoration:none}a:hover{color:var(--cyan)}button{font-family:inherit;cursor:pointer}
+input,select{font-family:inherit;font-size:14px;color:var(--ink);background:var(--bg1);border:1px solid var(--line2);border-radius:10px;padding:8px 12px;outline:none;transition:.2s}
+input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(61,155,255,.18)}
+input[type=range]{padding:0;border:none;background:none;accent-color:var(--cyan)}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.bg{position:fixed;inset:0;z-index:-1;background:radial-gradient(1100px 600px at 85% -10%,rgba(217,70,239,.14),transparent 60%),radial-gradient(900px 700px at -10% 20%,rgba(61,155,255,.16),transparent 60%),radial-gradient(800px 500px at 50% 110%,rgba(255,176,32,.09),transparent 60%),linear-gradient(180deg,#070b14,#0a1020 50%,#070b14)}
+.bg::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(147,161,196,.045) 0 1px,transparent 1px 52px),repeating-linear-gradient(90deg,rgba(147,161,196,.045) 0 1px,transparent 1px 52px);mask-image:radial-gradient(80% 70% at 50% 30%,#000 30%,transparent 100%)}
+.orb{position:fixed;border-radius:50%;filter:blur(70px);z-index:-1;opacity:.5;pointer-events:none}
+.orb.a{width:480px;height:480px;left:-140px;top:6%;background:radial-gradient(circle,rgba(61,155,255,.35),transparent 70%);animation:drift 26s ease-in-out infinite alternate}
+.orb.b{width:420px;height:420px;right:-120px;top:44%;background:radial-gradient(circle,rgba(217,70,239,.28),transparent 70%);animation:drift 32s ease-in-out infinite alternate-reverse}
+@keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(60px,-50px) scale(1.15)}}
+nav{position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(7,11,20,.78);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.nav-in{max-width:1400px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.logo{font-family:var(--disp);font-weight:700;font-size:17px;display:flex;align-items:center;gap:9px;white-space:nowrap}
+.logo .dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--mag));box-shadow:0 0 12px rgba(34,211,238,.8);animation:pulse 2.4s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.35)}}
+.nav-links{display:flex;gap:2px;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none}.nav-links::-webkit-scrollbar{display:none}
+.nav-links a{color:var(--mut);font-size:13.5px;font-weight:500;padding:7px 12px;border-radius:9px;white-space:nowrap;transition:.2s}
+.nav-links a:hover{color:var(--ink);background:var(--bg2)}
+.nav-links a.on{color:var(--cyan);background:rgba(34,211,238,.1);box-shadow:inset 0 -2px 0 var(--cyan)}
+.nav-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.badge{font-family:var(--mono);font-size:11.5px;padding:4px 10px;border-radius:99px;border:1px solid var(--line2);color:var(--mut);white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.badge .ld{width:7px;height:7px;border-radius:50%;background:var(--dim)}
+.badge.live .ld{background:var(--green);box-shadow:0 0 8px var(--green)}
+.badge.demo .ld{background:var(--gold);box-shadow:0 0 8px var(--gold)}
+.badge.sess .ld{background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+#clock{font-family:var(--mono);font-size:12px;color:var(--cyan)}
+.btn{border:1px solid var(--line2);background:var(--bg2);color:var(--ink);border-radius:10px;padding:7px 13px;font-size:13px;font-weight:500;transition:.2s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn:hover{border-color:var(--blue);transform:translateY(-1px);box-shadow:0 4px 16px rgba(61,155,255,.2)}
+.btn.pri{background:linear-gradient(135deg,var(--blue),var(--cyan));border:none;color:#04101f;font-weight:700}
+.btn.pri:hover{box-shadow:0 6px 22px rgba(34,211,238,.4)}
+.btn.sm{padding:4px 9px;font-size:12px;border-radius:8px}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.spin{display:inline-block;animation:rot 1s linear infinite}@keyframes rot{to{transform:rotate(360deg)}}
+main{max-width:1400px;margin:0 auto;padding:0 20px}
+section{scroll-margin-top:calc(var(--navh) + 16px);padding:32px 0 8px}
+.hero{padding:calc(var(--navh) + 44px) 0 6px}
+.kicker{font-family:var(--mono);font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:var(--acc,var(--cyan));display:flex;align-items:center;gap:10px}
+.kicker::before{content:"";width:26px;height:2px;background:linear-gradient(90deg,var(--acc,var(--cyan)),transparent)}
+h1{font-family:var(--disp);font-size:clamp(28px,4.4vw,48px);font-weight:700;line-height:1.15;margin:10px 0 8px;background:linear-gradient(100deg,#f3efe6 20%,var(--cyan) 55%,var(--mag) 90%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero p.sub{color:var(--mut);max-width:700px;font-size:15px}
+.hero-stats{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0 4px}
+.hstat{background:linear-gradient(160deg,var(--bg2),var(--bg1));border:1px solid var(--line);border-radius:14px;padding:12px 18px;min-width:130px;position:relative;overflow:hidden}
+.hstat::after{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--hc,var(--blue))}
+.hstat .l{font-size:11.5px;color:var(--dim)}.hstat .v{font-family:var(--mono);font-size:22px;font-weight:600;color:var(--hc,var(--ink))}
+.fresh{font-family:var(--mono);font-size:12px;color:var(--dim);margin-top:12px}.fresh b{color:var(--gold)}
+.sec-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+.sec-head h2{font-family:var(--disp);font-size:clamp(20px,2.4vw,26px);font-weight:700}
+.sec-head .desc{color:var(--dim);font-size:13px}
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .7s,transform .7s cubic-bezier(.2,.7,.2,1)}.reveal.in{opacity:1;transform:none}
+.panel{background:linear-gradient(170deg,var(--bg2),var(--bg1) 75%);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.ctlbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 14px;background:rgba(12,18,32,.7);border:1px solid var(--line);border-radius:14px;margin-bottom:14px}
+.ctl{display:flex;align-items:center;gap:7px}.ctl label{font-size:11.5px;color:var(--dim);white-space:nowrap}
+.seg{display:inline-flex;background:var(--bg1);border:1px solid var(--line2);border-radius:10px;padding:3px;gap:2px}
+.seg button{border:none;background:none;color:var(--mut);font-size:12.5px;padding:5px 11px;border-radius:8px;transition:.18s;font-weight:500}
+.seg button:hover{color:var(--ink)}.seg button.on{background:linear-gradient(135deg,var(--blue),var(--cyan));color:#04101f;font-weight:700}
+.predgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.pred{background:linear-gradient(165deg,var(--bg2),var(--bg1) 70%);border:1px solid var(--line);border-radius:var(--r);padding:16px;cursor:pointer;position:relative;overflow:hidden;transition:.25s;animation:enter .5s backwards}
+.pred:hover{transform:translateY(-4px);border-color:var(--line2);box-shadow:0 14px 34px rgba(3,6,14,.6)}
+.pred::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--pc,var(--blue))}
+@keyframes enter{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.pred .top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.pred .nm{font-size:15px;font-weight:700}
+.badges{display:flex;gap:6px;align-items:center}
+.dirbadge{font-family:var(--mono);font-size:12px;font-weight:700;padding:3px 10px;border-radius:8px}
+.dirbadge.long{color:var(--gain);background:rgba(255,59,92,.13)}
+.dirbadge.short{color:var(--loss);background:rgba(0,214,143,.13)}
+html[data-conv="intl"] .dirbadge.long{background:rgba(0,214,143,.13)}
+html[data-conv="intl"] .dirbadge.short{background:rgba(255,59,92,.13)}
+.srcbadge{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:99px;border:1px solid var(--line2);color:var(--mut)}
+.srcbadge.qwen{color:var(--mag);border-color:rgba(217,70,239,.5)}
+.srcbadge.hybrid{color:var(--cyan);border-color:rgba(34,211,238,.5)}
+.pred .thesis{font-size:13px;color:var(--mut);margin:2px 0 10px;min-height:38px}
+.pred .nums{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+.pred .pnl{font-family:var(--mono);font-size:24px;font-weight:600}
+.pred .entry{font-family:var(--mono);font-size:11.5px;color:var(--dim);text-align:right}
+.confrow{display:flex;align-items:center;gap:8px;margin-top:10px}
+.conftrack{flex:1;height:7px;background:var(--bg3);border-radius:5px;overflow:hidden}
+.conffill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--blue),var(--cyan))}
+.confval{font-family:var(--mono);font-size:12px;color:var(--cyan)}
+.pred .foot{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:10px;padding-top:9px;border-top:1px dashed var(--line)}
+.up{color:var(--gain)}.down{color:var(--loss)}
+.tablewrap{overflow-x:auto;border-radius:12px;border:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:680px}
+thead th{background:var(--bg3);color:var(--mut);font-size:12px;font-weight:600;text-align:left;padding:10px 12px;white-space:nowrap;position:sticky;top:0;cursor:pointer;user-select:none}
+thead th:hover{color:var(--cyan)}thead th .arr{font-size:10px;margin-left:4px;color:var(--cyan)}
+tbody td{padding:9px 12px;border-top:1px solid var(--line);white-space:nowrap}
+tbody tr{transition:background .15s;cursor:pointer}tbody tr:hover{background:rgba(61,155,255,.07)}
+td.num,th.num{font-family:var(--mono);text-align:right}
+.sigbar{display:inline-block;width:64px;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;vertical-align:middle;position:relative}
+.sigbar i{position:absolute;top:0;bottom:0;border-radius:4px}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.toolbar input[type=search]{flex:1;min-width:160px}
+.count{font-family:var(--mono);font-size:12px;color:var(--dim)}
+.scorestats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.lstat{background:var(--bg1);border:1px solid var(--line);border-radius:12px;padding:14px 16px;text-align:center}
+.lstat .l{font-size:11.5px;color:var(--dim)}.lstat .v{font-family:var(--mono);font-size:24px;font-weight:600}
+#eq{width:100%;height:200px;display:block;margin:6px 0 14px}
+.hit-y{color:var(--gain);font-weight:600}.hit-n{color:var(--loss);font-weight:600}
+.note{font-size:12px;color:var(--dim);margin-top:10px;line-height:1.7}
+.brainform{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.brainform .f{display:flex;flex-direction:column;gap:5px}
+.brainform label{font-size:11px;color:var(--dim);letter-spacing:.5px}
+.keyrow{display:flex;gap:8px}.keyrow input{flex:1}
+.brainbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+#brStatus{font-family:var(--mono);font-size:12px;color:var(--mut);min-height:18px;margin:8px 0}
+#brOut{font-family:var(--mono);font-size:11.5px;color:var(--mut);background:var(--bg0);border:1px solid var(--line);border-radius:10px;padding:12px;max-height:220px;overflow:auto;white-space:pre-wrap;word-break:break-word;margin-top:10px}
+.warnbox{font-size:12px;color:var(--gold);background:rgba(255,176,32,.07);border:1px solid rgba(255,176,32,.3);border-radius:10px;padding:10px 12px;margin:10px 0;line-height:1.7}
+footer{margin:46px 0 30px;padding-top:20px;border-top:1px solid var(--line);color:var(--dim);font-size:12.5px;display:flex;gap:18px;flex-wrap:wrap;justify-content:space-between}
+#scrim{position:fixed;inset:0;background:rgba(4,6,12,.62);backdrop-filter:blur(3px);z-index:60;opacity:0;pointer-events:none;transition:.3s}
+#scrim.show{opacity:1;pointer-events:auto}
+#drawer{position:fixed;top:0;right:0;bottom:0;width:min(480px,100vw);background:linear-gradient(180deg,var(--bg2),var(--bg1));border-left:1px solid var(--line2);z-index:61;transform:translateX(102%);transition:transform .38s cubic-bezier(.2,.8,.2,1);overflow-y:auto;padding:22px;box-shadow:-20px 0 60px rgba(0,0,0,.5)}
+#drawer.show{transform:none}
+#drawer .dh{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px}
+#drawer h3{font-family:var(--disp);font-size:22px}#drawer .ds{font-family:var(--mono);font-size:12px;color:var(--dim);margin-bottom:12px}
+#dwCv{width:100%;height:200px;display:block;margin:10px 0}
+.parts{display:grid;gap:9px;margin:12px 0}
+.part{display:grid;grid-template-columns:70px 1fr 52px;align-items:center;gap:10px;font-size:12.5px}
+.part .pl{color:var(--mut)}.part .pv{font-family:var(--mono);text-align:right}
+.part .track{height:9px;background:var(--bg3);border-radius:5px;position:relative;overflow:hidden}
+.part .track i{position:absolute;top:0;bottom:0;border-radius:5px}
+#dwThesis{font-size:13.5px;color:var(--mut);background:var(--bg1);border:1px solid var(--line);border-radius:10px;padding:12px;margin:10px 0}
+#dwRisk{font-size:12.5px;color:var(--gold);margin:6px 0}
+#settings{position:fixed;top:calc(var(--navh) + 8px);right:16px;width:min(360px,calc(100vw - 32px));background:var(--bg2);border:1px solid var(--line2);border-radius:14px;padding:18px;z-index:55;box-shadow:0 20px 60px rgba(0,0,0,.6);display:none}
+#settings.show{display:block;animation:enter .25s}
+#settings h4{font-size:15px;margin-bottom:4px}#settings p{font-size:12px;color:var(--dim);margin-bottom:12px}
+#settings .f{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}#settings label{font-size:11px;color:var(--dim)}
+#connMsg{font-family:var(--mono);font-size:11.5px;color:var(--mut);margin-top:10px;min-height:16px}
+#toasts{position:fixed;bottom:18px;right:18px;z-index:70;display:flex;flex-direction:column;gap:9px;max-width:min(380px,calc(100vw - 36px))}
+.toast{background:var(--bg3);border:1px solid var(--line2);border-left:3px solid var(--cyan);border-radius:12px;padding:11px 14px;font-size:13px;display:flex;align-items:center;gap:12px;box-shadow:0 12px 34px rgba(0,0,0,.5);animation:tin .3s}
+.toast.warn{border-left-color:var(--gold)}.toast.err{border-left-color:var(--red)}.toast.ok{border-left-color:var(--green)}
+@keyframes tin{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}
+.toast.out{opacity:0;transform:translateX(30px);transition:.3s}
+.empty{color:var(--dim);padding:26px;text-align:center;border:1px dashed var(--line2);border-radius:14px}
+@media (max-width:900px){.nav-in{padding:8px 14px}.nav-links{order:3;flex-basis:100%}main{padding:0 14px}.ctlbar{flex-wrap:nowrap;overflow-x:auto}.ctl{flex:none}.brainform{grid-template-columns:1fr}}
+@media (max-width:640px){.hero{padding-top:calc(var(--navh) + 64px)}.predgrid{grid-template-columns:1fr}.hstat{min-width:104px;padding:10px 14px}.hstat .v{font-size:18px}#drawer{padding:16px}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="bg"></div><div class="orb a"></div><div class="orb b"></div>
+<nav id="nav"><div class="nav-in">
+  <div class="logo"><span class="dot"></span>預測指揮中心</div>
+  <div class="nav-links" id="navLinks"><a href="#active" class="on">進行中預測</a><a href="#brain">判斷大腦</a><a href="#engine">訊號引擎</a><a href="#score">成績單</a></div>
+  <div class="nav-meta">
+    <span class="badge sess"><span class="ld"></span><span id="session">—</span></span>
+    <span id="clock">--:--:--</span>
+    <span class="badge demo" id="srcBadge"><span class="ld"></span><span id="srcText">示範資料</span></span>
+    <button class="btn sm" id="btnRegen">⟳ 重新產生</button>
+    <button class="btn sm" id="btnConv">紅漲綠跌</button>
+    <button class="btn sm" id="btnSettings">⚙ 資料連線</button>
+  </div>
+</div></nav>
+<main>
+<header class="hero">
+  <div class="kicker">Prediction Desk · Qwen4-Max 判斷大腦</div>
+  <h1>規則引擎打底,<br>Qwen4-Max 當你的判斷大腦</h1>
+  <p class="sub">三種模式:<b style="color:var(--cyan)">規則</b>(免費離線)、<b style="color:var(--mag)">Qwen</b>(把市場快照丟給 Qwen4-Max 產出結構化預測)、<b style="color:var(--gold)">混合</b>(Qwen 主導、規則校準信心)。每一則預測都有進場價與驗證期限,時間到自動對答案;下方成績單用回測與實戰追蹤,誠實告訴你準不準。</p>
+  <div class="hero-stats">
+    <div class="hstat" style="--hc:var(--cyan)"><div class="l">進行中預測</div><div class="v" id="statActive">—</div></div>
+    <div class="hstat" style="--hc:var(--gold)"><div class="l">回測命中率</div><div class="v" id="statHit">—</div></div>
+    <div class="hstat" style="--hc:var(--gain)"><div class="l">平均每次報酬</div><div class="v" id="statAvg">—</div></div>
+    <div class="hstat" style="--hc:var(--mag)"><div class="l">判斷模式</div><div class="v" id="statMode" style="font-size:16px">規則</div></div>
+  </div>
+  <div class="fresh">訊號時間:<b id="fresh">—</b> · 規則式訊號與 LLM 預測僅供研究,<b style="color:var(--gold)">非投資建議</b>;回測不代表未來績效</div>
+</header>
+
+<section id="active" style="--acc:var(--cyan)">
+  <div class="sec-head reveal"><div><div class="kicker">Live Signals</div><h2>進行中的預測</h2></div><div class="desc">點卡片看訊號拆解與風險 · 標籤注明来源(規則/Qwen/混合)</div></div>
+  <div class="predgrid" id="predGrid"></div>
+</section>
+
+<section id="brain" style="--acc:var(--mag)">
+  <div class="sec-head reveal"><div><div class="kicker">Judgment Brain</div><h2>判斷大腦(Qwen4-Max)</h2></div><div class="desc">把新聞×動能×情緒×資金的快照交给最新旗艦模型產出預測</div></div>
+  <div class="panel reveal">
+    <div class="brainform">
+      <div class="f"><label>供應商</label><select id="brProvider"><option value="openrouter">OpenRouter(瀏覽器可直接呼叫)</option><option value="dashscope-intl">阿里雲 Model Studio 國際站</option><option value="dashscope-cn">阿里雲 Model Studio 中國站</option><option value="custom">自訂(代理/其他)</option></select></div>
+      <div class="f"><label>模型 ID</label><input id="brModel" value="qwen/qwen4-max"></div>
+      <div class="f"><label>Base URL</label><input id="brBase" value="https://openrouter.ai/api/v1"></div>
+      <div class="f"><label>API 金鑰</label><div class="keyrow"><input id="brKey" type="password" placeholder="sk-…"><button class="btn sm" id="brKeyToggle">顯示</button></div></div>
+    </div>
+    <div class="brainbar">
+      <div class="ctl"><label>判斷模式</label><div class="seg" id="brMode"><button data-m="rule" class="on">規則</button><button data-m="qwen">Qwen</button><button data-m="hybrid">混合</button></div></div>
+      <button class="btn pri" id="btnBrain">🧠 讓 Qwen4-Max 判斷</button>
+      <label style="font-size:12px;color:var(--mut);display:flex;gap:6px;align-items:center"><input type="checkbox" id="brAuto">重新產生時一併呼叫</label>
+    </div>
+    <div id="brStatus">尚未呼叫。填好金鑰後按「讓 Qwen4-Max 判斷」。</div>
+    <div class="warnbox">🔐 金鑰只存在這台瀏覽器(localStorage),直接從浏览器送到供應商,不會經過任何第三方伺服器。這是公開網頁,請用<b>設有用量上限</b>的金鑰;不想暴露金鑰可改填自訂代理 URL。Qwen4-Max 約 $1.5/M 輸入、$4.5/M 輸出,一次判斷通常不到 $0.01。</div>
+    <div class="kicker" style="--acc:var(--mag);margin:14px 0 6px">Qwen 回傳的預測</div>
+    <div class="tablewrap"><table><thead><tr><th>品種</th><th>方向</th><th class="num">信心</th><th class="num">天數</th><th>論點</th><th>風險</th></tr></thead><tbody id="brPreds"></tbody></table></div>
+    <div class="kicker" style="--acc:var(--dim);margin:14px 0 4px">原始輸出(除錯用)</div>
+    <pre id="brOut">(尚未呼叫)</pre>
+    <div class="kicker" style="--acc:var(--gold);margin:16px 0 6px">實戰追蹤成績(預測到期自動對答案)</div>
+    <div class="scorestats" id="trackStats"></div>
+  </div>
+</section>
+
+<section id="engine" style="--acc:var(--blue)">
+  <div class="sec-head reveal"><div><div class="kicker">Signal Engine</div><h2>訊號引擎(透明拆解)</h2></div><div class="desc">綜合分數 = 新聞 45% + 動能 35% + 情緒 12% + 資金 8%</div></div>
+  <div class="ctlbar reveal">
+    <div class="ctl"><label>最低信心度 <b id="confVal" style="color:var(--cyan)">0.45</b></label><input type="range" id="ctlConf" min="0.3" max="0.9" step="0.05" value="0.45" style="width:120px"></div>
+    <div class="ctl"><label>驗證天數</label><select id="ctlHor"><option value="1">1 日</option><option value="5" selected>5 日</option><option value="20">20 日</option></select></div>
+    <div class="ctl"><label>方向</label><div class="seg" id="ctlDir"><button data-d="all" class="on">全部</button><button data-d="看多">看多</button><button data-d="看空">看空</button></div></div>
+    <div class="ctl"><label>排序</label><div class="seg" id="ctlSort"><button data-s="conf" class="on">信心</button><button data-s="comp">強度</button><button data-s="name">名稱</button></div></div>
+    <div class="ctl"><input type="search" id="ctlQ" placeholder="搜尋品種…" style="width:140px"></div>
+    <button class="btn sm" id="btnRegen2">⟳ 重新計算</button>
+    <button class="btn sm" id="btnCsv">⬇ 匯出訊號</button>
+  </div>
+  <div class="panel reveal"><div class="tablewrap"><table><thead id="engHead"></thead><tbody id="engBody"></tbody></table></div>
+  <div class="note">綜合分數 -1(強烈看空)~ +1(強烈看多)。達門檻才列為「進行中預測」。Qwen/混合模式時,這欄仍顯示規則分數供對照。</div></div>
+</section>
+
+<section id="score" style="--acc:var(--gold)">
+  <div class="sec-head reveal"><div><div class="kicker">Report Card</div><h2>成績單(動能規則回測)</h2></div><div class="desc">同一套動能規則套在歷史每個時點、事後對答案——過去資料的用處在這</div></div>
+  <div class="scorestats reveal" id="scoreStats"></div>
+  <div class="panel reveal">
+    <div class="kicker" style="--acc:var(--gold);margin-bottom:6px">累計訊號報酬曲線(方向調整後,%)</div>
+    <canvas id="eq"></canvas>
+    <div class="toolbar"><div class="seg" id="scoreFilter"><button data-f="all" class="on">全部</button><button data-f="hit">命中</button><button data-f="miss">未中</button></div><div class="seg" id="scoreDir"><button data-d="all" class="on">多空</button><button data-d="1">看多</button><button data-d="-1">看空</button></div><span class="count" id="scoreCount"></span><button class="btn sm" id="btnScoreCsv">⬇ 匯出成績單</button></div>
+    <div class="tablewrap"><table><thead id="scoreHead"></thead><tbody id="scoreBody"></tbody></table></div>
+    <div class="note">回測僅用價格動能規則(新聞/LLM 無歷史可回測);樣本來自你 data 分支的真實價格或示範種子。命中率 &gt; 50% 且平均報酬為正才代表有點料。Qwen 的實戰表現請看上方「實戰追蹤」,會隨使用累積。</div>
+  </div>
+</section>
+<footer>
+  <div>⚠️ 規則訊號與 LLM 預測僅供研究,<b style="color:var(--gold)">非投資建議</b>。預測會錯,成績單就是用來誠實面對這件事。</div>
+  <div>大腦:Qwen4-Max(qwen4-max)· 資料:你的 GitHub data 分支 · <a href="dashboard.html">← 回儀表板</a></div>
+</footer>
+</main>
+<div id="scrim"></div>
+<aside id="drawer" aria-label="預測詳情">
+  <div class="dh"><div><h3 id="dwTitle">—</h3><div class="ds" id="dwSub">—</div></div><button class="btn sm" id="dwClose">✕</button></div>
+  <div id="dwThesis"></div><div id="dwRisk"></div>
+  <canvas id="dwCv"></canvas>
+  <div class="kicker" style="--acc:var(--blue);margin:12px 0 6px">訊號拆解</div>
+  <div class="parts" id="dwParts"></div>
+  <div class="parts" id="dwMeta"></div>
+</aside>
+<div id="settings">
+  <h4>🔗 連接你的資料管線</h4>
+  <p>已預填你的 repo。讀取 data 分支真實價格/新聞/PTT;失敗自動用示範資料。</p>
+  <div class="f"><label>GitHub 帳號</label><input id="ghOwner" value="z32216x"></div>
+  <div class="f"><label>Repo 名稱</label><input id="ghRepo" value="mkt-dashboard"></div>
+  <div style="display:flex;gap:8px"><button class="btn pri" id="btnConnect">連線</button><button class="btn" id="btnDisconnect">斷開</button></div>
+  <div id="connMsg"></div>
+</div>
+<div id="toasts"></div>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const avg=a=>a.length?a.reduce((s,x)=>s+x,0)/a.length:0;
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function hashStr(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+function gauss(r){let u=0,v=0;while(!u)u=r();while(!v)v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+const fmtN=(v,d=2)=>Number(v).toLocaleString('zh-TW',{minimumFractionDigits:d,maximumFractionDigits:d});
+const pct=v=>(v>=0?'+':'')+v.toFixed(2)+'%';
+const safeSym=s=>s.replace(/[^A-Za-z0-9]+/g,'_');
+const KEY_WEIGHTS=[[/升息|降息|利率決策|央行|Fed|聯準會/i,3],[/戰爭|軍事|制裁|關稅|貿易戰/i,3],[/財報|法說|營收|獲利|EPS/i,2],[/外資|法人|買賣超/i,2],[/AI|輝達|Nvidia|台積電|2330/i,2],[/暴跌|崩|熔斷|漲停|跌停|創新高|創新低/i,2]];
+const scoreText=t=>{let s=1;for(const[re,w]of KEY_WEIGHTS)if(re.test(t||''))s+=w;return Math.min(s,10)};
+const parseNrec=t=>{t=(t||'').trim();if(t==='爆')return 100;if(t[0]==='X'){const n=t.slice(1);return(n==='X'||n==='')?-100:-10*(/^\d+$/.test(n)?+n:10)}const v=parseInt(t,10);return isNaN(v)?0:v};
+const gnews=t=>'https://news.google.com/search?q='+encodeURIComponent(t)+'&hl=zh-TW&gl=TW&ceid=TW:zh-Hant';
+function toDate(v){if(v instanceof Date)return v;if(typeof v==='number')return new Date(v>1e14?v/1000:v);const d=new Date(v);return isNaN(d)?new Date():d}
+function addTradingDays(d,n){const x=new Date(d);let a=0;while(a<n){x.setDate(x.getDate()+1);const w=x.getDay();if(w!==0&&w!==6)a++}return x}
+function retN(pts,n){return pts.length>n?pts[pts.length-1].c/pts[pts.length-1-n].c-1:0}
+
+const SYMBOLS=[
+ {s:'^TWII',n:'台股加權',base:28450,vol:.011,d:2,bv:4.5e9},{s:'2330.TW',n:'台積電',base:1545,vol:.018,d:2,bv:2.6e7},
+ {s:'0050.TW',n:'元大台灣50',base:58.4,vol:.012,d:2,bv:8e7},{s:'^GSPC',n:'S&P 500',base:6920,vol:.009,d:2,bv:3.8e9},
+ {s:'^SOX',n:'費城半導體',base:7240,vol:.016,d:2,bv:1.6e9},{s:'TSM',n:'台積電 ADR',base:312,vol:.018,d:2,bv:1.2e7},
+ {s:'^N225',n:'日經225',base:52300,vol:.012,d:2,bv:1.9e9},{s:'^HSI',n:'恆生指數',base:26400,vol:.014,d:2,bv:1.4e9},
+ {s:'TWD=X',n:'美元/台幣',base:30.42,vol:.004,d:3,bv:8e4},{s:'GC=F',n:'黃金',base:4215,vol:.012,d:2,bv:1.8e5},
+ {s:'CL=F',n:'WTI 原油',base:62.8,vol:.022,d:2,bv:2.2e5},{s:'^VIX',n:'VIX 恐慌',base:16.4,vol:.06,d:2,bv:0}
+];
+const SYM_MAP=Object.fromEntries(SYMBOLS.map(x=>[x.s,x]));
+const PRED_SYMS=SYMBOLS.map(x=>x.s);
+const symName=s=>SYM_MAP[s]?SYM_MAP[s].n:s;
+const closeOf=s=>{const p=S.series[s];return p&&p.length?p[p.length-1].c:null};
+function genSeries(sym,meta){
+  const rng=mulberry32(hashStr(sym));const days=[];const d=new Date();d.setHours(0,0,0,0);
+  while(days.length<520){const w=d.getDay();if(w!==0&&w!==6)days.push(new Date(d));d.setDate(d.getDate()-1)}
+  days.reverse();const pts=[];let c=meta.base;const drift=(meta.s==='TWD=X')?0:.00045;
+  for(let i=0;i<days.length;i++){let r=drift+meta.vol*gauss(rng);if(rng()<.012)r+=(rng()-.45)*meta.vol*7;
+    const prev=c;c=Math.max(prev*(1+r),meta.base*.2);const o=prev*(1+meta.vol*.25*gauss(rng));
+    const hi=Math.max(o,c)*(1+Math.abs(gauss(rng))*meta.vol*.45);const lo=Math.min(o,c)*(1-Math.abs(gauss(rng))*meta.vol*.45);
+    const v=meta.bv*(.55+rng()*.9)*(1+2.5*Math.abs(r)/meta.vol);pts.push({t:days[i],o,h:hi,l:lo,c,v})}
+  return pts;
+}
+const NEWS_SEED=[['Fed 暗示 12 月降息一碼 美股全面走揚','Fed','Reuters',2],['央行理監事會登場 利率可望連八凍','台幣','中央社',5],['台積電法說會倒數 外資連五買超逾 8 萬張','台積電','經濟日報',1],['台幣爆量升破 30.5 央行尾盤調節','台幣','鉅亨網',3],['AI 伺服器拉貨強勁 鴻海 11 月營收創高','台股','工商時報',7],['黃金現貨站上 4,200 美元 避險買盤增溫','黃金','彭博',9],['WTI 原油跌破 63 美元 OPEC+ 增產預期發酵','油價','Reuters',11],['費半指數創歷史新高 輝達領漲半導體族群','費半','工商時報',4],['外資賣超台股 187 億 調節金融與航運','台股','經濟日報',6],['Fed 官員談話偏鷹 美債殖利率彈升','Fed','彭博',14],['台積電 2 奈米量產進度報喜 供應鏈受惠','台積電','財訊快報',8],['關稅談判傳進展 台股期貨夜盤大漲','台股','中央社',10],['油價回落 航空股成本壓力緩解','油價','經濟日報',16],['黃金 ETF 資金回流 創三個月最大單週淨流入','黃金','鉅亨網',20],['輝達財報優於預期 資料中心營收翻倍','費半','Reuters',13],['台股震盪守穩月線 法人:選股不選市','台股','財訊快報',18],['沙烏地暗示延長減產 油價跌深反彈','油價','彭博',28],['Fed 會議紀要:多數官員支持漸進降息','Fed','中央社',30],['台積電 ADR 溢價收斂 套利買盤進場','台積電','鉅亨網',32],['黃金創新高後震盪 分析師:長線仍偏多','黃金','工商時報',36]];
+const PTT_SEED=[['[新聞] 台積電 ADR 大漲 創歷史新天價','爆','stockcat',1],['[新聞] Fed 暗示 12 月降息 美股全面噴出','99','fedwatch',2],['[請益] 0050 定期定額十年 該停利了嗎','76','longterm55',4],['[新聞] 台幣爆量升破 30.5 央行出手','爆','fxgod',5],['[標的] 6669 緯穎 AI 伺服器出貨展望','45','serverman',7],['[新聞] 黃金站上 4200 美元 還能追嗎','37','goldbug',9],['[新聞] 外資連五買台積電 目標價上修','64','chipfan',8],['[新聞] 費半創新高 台股明天穩了?','51','soxboy',11],['[新聞] OPEC+ 考慮增產 油價跳水','29','oilbear',16],['[請益] 美債 ETF 套牢 該認賠換股嗎','X2','bondholder',10]];
+const RANK_SEED=[['2330','台積電',1545,486,-0.93],['2317','鴻海',262,238,-0.60],['2454','聯發科',1495,176,1.25],['6669','緯穎',3120,142,-1.19],['2382','廣達',342,128,-1.95],['3231','緯創',168,112,-0.11],['2308','台達電',585,98,2.62],['2881','富邦金',96.4,88,0.10],['2882','國泰金',72.8,84,2.23],['2303','聯電',52.6,74,2.44]];
+const CATALYSTS=[
+ {re:/降息|鴿|寬鬆/,eff:[['^GSPC',1],['^TWII',1],['2330.TW',1],['GC=F',1],['TWD=X',-1]],w:3,tag:'Fed 偏鴿,有利風險資產'},
+ {re:/升息|鷹派|殖利率彈升/,eff:[['^GSPC',-1],['^TWII',-1],['GC=F',-1],['TWD=X',1]],w:3,tag:'Fed 偏鷹,壓抑風險資產'},
+ {re:/台積電.*(法說|營收|買超|2奈米|創高|目標價)|外資.*買.*台積/,eff:[['2330.TW',1],['TSM',1],['^TWII',.6]],w:2.5,tag:'台積電利多,帶動台股'},
+ {re:/油價.*(跌|回落|跳水)|OPEC.*增產/,eff:[['CL=F',-1]],w:2,tag:'供給增加,油價偏空'},
+ {re:/油價.*(漲|反彈)|減產/,eff:[['CL=F',1]],w:2,tag:'供給收縮,油價偏多'},
+ {re:/黃金.*(創高|站上|避險|回流)|央行購金/,eff:[['GC=F',1]],w:2,tag:'避險買盤,黃金偏多'},
+ {re:/台幣.*(升|升破)|外資.*匯入/,eff:[['TWD=X',-1],['^TWII',.5]],w:2,tag:'台幣走升,資金流入台股'},
+ {re:/VIX.*(飆|升)|恐慌/,eff:[['^TWII',-1],['^GSPC',-1],['^VIX',1]],w:2.5,tag:'避險情緒升溫'},
+ {re:/費半.*(創高|新高)|輝達.*(財報|優於|翻倍)/,eff:[['^SOX',1],['2330.TW',.7],['TSM',.7]],w:2,tag:'半導體動能強勁'},
+ {re:/關稅|貿易戰|制裁/,eff:[['^TWII',-.8],['^HSI',-.8]],w:2,tag:'貿易/地緣風險升高'},
+ {re:/外資.*賣超/,eff:[['^TWII',-.7]],w:1.8,tag:'外資調節,台股承壓'}
+];
+const PROVIDERS={
+ openrouter:{base:'https://openrouter.ai/api/v1',model:'qwen/qwen4-max',in:1.425,out:4.275},
+ 'dashscope-intl':{base:'https://dashscope-intl.aliyuncs.com/compatible-mode/v1',model:'qwen4-max',in:1.5,out:4.5},
+ 'dashscope-cn':{base:'https://dashscope.aliyuncs.com/compatible-mode/v1',model:'qwen4-max',in:1.5,out:4.5},
+ custom:{base:'',model:'qwen4-max',in:1.5,out:4.5}
+};
+const store={get(k,f){try{const v=localStorage.getItem('pred.'+k);return v==null?f:JSON.parse(v)}catch(e){return f}},set(k,v){try{localStorage.setItem('pred.'+k,JSON.stringify(v))}catch(e){}}};
+const S={conv:'tw',source:'demo',repo:{owner:'z32216x',name:'mkt-dashboard'},liveCount:0,
+ conf:.45,hor:5,dir:'all',sort:'conf',q:'',scoreFilter:'all',scoreDir:'all',
+ series:{},news:[],ptt:[],rank:[],signals:[],active:[],backtest:[],tracked:[],qwenPreds:[],lastFresh:null,drawer:null,
+ brain:{provider:'openrouter',model:'qwen/qwen4-max',base:'https://openrouter.ai/api/v1',key:'',mode:'rule',busy:false,last:null}};
+const gainC=()=>S.conv==='tw'?'#ff3b5c':'#00d68f';
+const lossC=()=>S.conv==='tw'?'#00d68f':'#ff3b5c';
+function toast(msg,type){const t=document.createElement('div');t.className='toast '+(type||'ok');t.textContent=msg;$('toasts').appendChild(t);setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),320)},4600)}
+function download(name,text){const b=new Blob(['\ufeff'+text],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
+function wireSeg(id,cb){const el=$(id);el.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!el.contains(b))return;el.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));cb(b.dataset)})}
+function setSeg(id,key,val){$(id).querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset[key]===String(val)))}
+function fit(cv){const r=cv.getBoundingClientRect();const dpr=Math.min(2,window.devicePixelRatio||1);cv.width=Math.max(1,Math.round(r.width*dpr));cv.height=Math.max(1,Math.round(r.height*dpr));const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);return{ctx,w:r.width,h:r.height}}
+
+function momentumSignal(pts){
+  if(pts.length<61)return 0;const cs=pts.map(p=>p.c);const last=cs[cs.length-1];
+  const ma20=avg(cs.slice(-20)),ma60=avg(cs.slice(-60));
+  const ret20=last/cs[cs.length-21]-1,ret5=last/cs[cs.length-6]-1;
+  const yr=pts.slice(-252);const hi=Math.max(...yr.map(p=>p.h)),lo=Math.min(...yr.map(p=>p.l));const pos=(last-lo)/((hi-lo)||1);
+  return clamp(clamp((ma20/ma60-1)*25,-1,1)*.4+clamp(ret20*8,-1,1)*.3+clamp(ret5*15,-1,1)*.15+(pos>.9?-.3:pos<.1?.3:0)*.15,-1,1);
+}
+function newsScores(){const sc={},tags={};
+  S.news.forEach(n=>{const imp=n.importance||scoreText(n.title);
+    CATALYSTS.forEach(cat=>{if(cat.re.test(n.title)){const w=cat.w*imp/10;
+      cat.eff.forEach(([sym,dir])=>{sc[sym]=(sc[sym]||0)+dir*w;if(!tags[sym]||w>tags[sym].w)tags[sym]={w,tag:cat.tag}})}})});
+  Object.keys(sc).forEach(k=>sc[k]=clamp(sc[k],-1,1));return{sc,tags}}
+function sentimentScores(){const sc={};const map=[[/台積電|2330/,'2330.TW'],[/台股|加權/,'^TWII'],[/0050/,'0050.TW'],[/費半|輝達/,'^SOX'],[/黃金/,'GC=F'],[/油價|原油/,'CL=F'],[/台幣/,'TWD=X'],[/美股|S&P/,'^GSPC']];
+  S.ptt.forEach(p=>{map.forEach(([re,sym])=>{if(re.test(p.title))sc[sym]=(sc[sym]||0)+clamp(p.nrec_num/100,-1,1)*.5})});
+  Object.keys(sc).forEach(k=>sc[k]=clamp(sc[k],-1,1));return sc}
+function turnoverScores(){const sc={};S.rank.slice(0,15).forEach(r=>{sc[r.code+'.TW']=clamp(r.chg/3,-1,1)*.5});return sc}
+function buildSignals(){
+  const{sc:news,tags}=newsScores();const sent=sentimentScores();const turn=turnoverScores();
+  S.signals=PRED_SYMS.map(sym=>{const pts=S.series[sym]||[];const mom=momentumSignal(pts);const n=news[sym]||0,se=sent[sym]||0,tu=turn[sym]||0;
+    const comp=clamp(.45*n+.35*mom+.12*se+.08*tu,-1,1);const conf=clamp(.35+Math.abs(comp)*.6,.1,.95);const dir=comp>=0?'看多':'看空';
+    const thesis=tags[sym]?tags[sym].tag:(Math.abs(mom)>.15?(mom>0?'價格動能偏多':'價格動能偏空'):'綜合訊號中性');
+    return{sym,name:symName(sym),comp,conf,dir,thesis,parts:{news:n,mom,sent:se,turn:tu},last:pts.length?pts[pts.length-1].c:null}});
+}
+function generateActive(){
+  const now=new Date();let list=[];
+  const mk=(sym,src,thesis,conf,dir,comp,parts,risk)=>{const entry=closeOf(sym);if(entry==null)return null;
+    return{id:sym+'_'+now.getTime()+'_'+src,sym,name:symName(sym),dir,conf,comp,thesis,parts:parts||{news:0,mom:0,sent:0,turn:0},entry,created:now.getTime(),verifyBy:addTradingDays(now,S.hor).getTime(),hor:S.hor,status:'active',source:src,risk:risk||''}};
+  if(S.brain.mode==='rule'){
+    list=S.signals.filter(x=>Math.abs(x.comp)>=.18&&x.conf>=S.conf&&(S.dir==='all'||x.dir===S.dir)).sort((a,b)=>b.conf-a.conf).slice(0,9)
+      .map(x=>mk(x.sym,'規則',x.thesis,x.conf,x.dir,x.comp,x.parts)).filter(Boolean);
+  }else{
+    const qp=S.qwenPreds||[];const bySym={};qp.forEach(p=>bySym[p.symbol]=p);
+    if(S.brain.mode==='qwen'){
+      list=qp.map(p=>{const x=S.signals.find(s=>s.sym===p.symbol);return mk(p.symbol,'Qwen',p.thesis,p.conf,p.dir,x?x.comp:0,x?x.parts:null,p.risk)}).filter(Boolean);
+    }else{
+      S.signals.forEach(x=>{const p=bySym[x.sym];
+        if(p){list.push(mk(x.sym,'混合',p.thesis+'(規則 '+x.comp.toFixed(2)+')',clamp(.6*p.conf+.4*x.conf,.1,.95),p.dir,x.comp,x.parts,p.risk))}
+        else if(Math.abs(x.comp)>=.25){list.push(mk(x.sym,'規則',x.thesis,x.conf,x.dir,x.comp,x.parts))}});
+      list=list.filter(Boolean);
+    }
+    list=list.filter(p=>p.conf>=S.conf&&(S.dir==='all'||p.dir===S.dir)).sort((a,b)=>b.conf-a.conf).slice(0,9);
+  }
+  S.active=list;store.set('active',S.active);
+}
+function runBacktest(){const out=[];const hor=S.hor;
+  PRED_SYMS.forEach(sym=>{const pts=S.series[sym]||[];
+    for(let i=60;i<pts.length-hor;i+=hor){const sig=momentumSignal(pts.slice(0,i+1));if(Math.abs(sig)<.15)continue;
+      const dir=sig>0?1:-1;const entry=pts[i].c,exit=pts[i+hor].c;const ret=(exit/entry-1)*dir*100;
+      out.push({sym,name:symName(sym),date:pts[i].t.getTime(),dir,conf:clamp(.35+Math.abs(sig)*.6,.1,.95),entry,exit,ret,hit:ret>0,hor})}});
+  S.backtest=out.sort((a,b)=>a.date-b.date)}
+function backtestStats(){const r=S.backtest;const n=r.length;const hits=r.filter(x=>x.hit).length;
+  return{n,rate:n?Math.round(hits/n*100):0,avg:n?avg(r.map(x=>x.ret)):0,longN:r.filter(x=>x.dir>0).length,shortN:r.filter(x=>x.dir<0).length}}
+function verifyMatured(){
+  const now=Date.now();const keep=[];const tracked=store.get('tracked',[]);
+  (store.get('active',[])).forEach(p=>{
+    if(p.verifyBy<=now){const pts=S.series[p.sym]||[];const bar=pts.find(b=>b.t.getTime()>=p.verifyBy)||pts[pts.length-1];
+      if(bar&&p.entry){const sign=p.dir==='看多'?1:-1;const ret=(bar.c/p.entry-1)*sign*100;tracked.push(Object.assign({},p,{exit:bar.c,ret,hit:ret>0,verifiedAt:now}))}}
+    else keep.push(p)});
+  store.set('tracked',tracked);store.set('active',keep);S.tracked=tracked;S.active=keep;
+}
+
+/* ---- Qwen brain ---- */
+function extractJSON(txt){
+  if(!txt)return null;try{return JSON.parse(txt)}catch(e){}
+  const a=txt.indexOf('{'),b=txt.lastIndexOf('}');
+  if(a>=0&&b>a){try{return JSON.parse(txt.slice(a,b+1))}catch(e){}}
+  const c=txt.indexOf('['),d=txt.lastIndexOf(']');
+  if(c>=0&&d>c){try{return JSON.parse(txt.slice(c,d+1))}catch(e){}}
+  return null;
+}
+function normDir(v){v=String(v||'');if(/多|bull|long|buy|看升/i.test(v))return '看多';if(/空|bear|short|sell|看跌/i.test(v))return '看空';return null}
+function normalizePreds(arr){
+  const out=[];arr.forEach(p=>{if(!p||typeof p!=='object')return;
+    const sym=String(p.symbol||p.sym||'');const dir=normDir(p.direction||p.dir);const entry=closeOf(sym);
+    if(!sym||!dir||entry==null)return;
+    out.push({symbol:sym,dir,conf:clamp(+p.confidence||+p.conf||.5,.05,.95),hor:parseInt(p.horizon_days||p.hor||S.hor,10)||S.hor,
+      thesis:String(p.thesis||p.reason||'').slice(0,160),risk:String(p.risk||'').slice(0,120)})});
+  return out;
+}
+function buildSnapshot(){
+  const sig=S.signals.map(x=>{const pts=S.series[x.sym]||[];return{symbol:x.sym,name:x.name,close:x.last,ret5:+(retN(pts,5)*100).toFixed(2),ret20:+(retN(pts,20)*100).toFixed(2),rule_score:+x.comp.toFixed(2),rule_dir:x.dir,news:+x.parts.news.toFixed(2),momentum:+x.parts.mom.toFixed(2)}});
+  const news=S.news.slice(0,14).map(n=>({title:n.title,importance:n.importance,topic:n.topic}));
+  const ptt=S.ptt.slice(0,8).map(p=>({title:p.title,nrec:p.nrec}));
+  return{as_of:new Date().toISOString(),horizon_days:S.hor,symbols:sig,news,ptt_sentiment:ptt};
+}
+async function callQwen(){
+  if(S.brain.busy)return;
+  const key=$('brKey').value.trim();
+  if(!key){toast('請先填 API 金鑰','warn');$('brKey').focus();return}
+  S.brain.key=key;S.brain.model=$('brModel').value.trim();S.brain.base=$('brBase').value.trim();
+  store.set('brain',{provider:S.brain.provider,model:S.brain.model,base:S.brain.base,key,mode:S.brain.mode});
+  S.brain.busy=true;$('btnBrain').disabled=true;
+  $('brStatus').textContent='呼叫 Qwen4-Max 中…推理模型約需 10–40 秒,請稍候';
+  const t0=performance.now();const ctl=new AbortController();const timer=setTimeout(()=>ctl.abort(),90000);
+  const sys='你是資深台股與全球宏觀分析師。根據市場快照(規則訊號、新聞、PTT情緒、價格動能),對你有明確看法的品種給出結構化預測。只輸出 JSON,格式 {"predictions":[{"symbol":"代碼","direction":"看多或看空","confidence":0到1,"horizon_days":整數,"thesis":"一句話論點","risk":"主要風險"}]}。confidence 須校準,沒把握就省略該品種。symbol 必須是快照中出現的代碼。不要輸出 JSON 以外的文字。';
+  const usr='市場快照如下,驗證天數='+S.hor+'。請輸出 JSON:\n'+JSON.stringify(buildSnapshot());
+  const mkBody=rf=>{const b={model:S.brain.model,messages:[{role:'system',content:sys},{role:'user',content:usr}],temperature:.2,max_tokens:2000};if(rf)b.response_format={type:'json_object'};return b};
+  const url=S.brain.base.replace(/\/+$/,'')+'/chat/completions';
+  const headers={'Content-Type':'application/json','Authorization':'Bearer '+key,'HTTP-Referer':location.origin,'X-Title':'Prediction Desk'};
+  try{
+    let r=await fetch(url,{method:'POST',headers,body:JSON.stringify(mkBody(true)),signal:ctl.signal});
+    if(r.status===400){r=await fetch(url,{method:'POST',headers,body:JSON.stringify(mkBody(false)),signal:ctl.signal})}
+    if(!r.ok){const e=await r.text();throw new Error('HTTP '+r.status+' '+e.slice(0,180))}
+    const data=await r.json();
+    const txt=(data.choices&&data.choices[0]&&data.choices[0].message)?data.choices[0].message.content:'';
+    const parsed=extractJSON(txt);const arr=parsed?(parsed.predictions||parsed):[];
+    S.qwenPreds=normalizePreds(Array.isArray(arr)?arr:[]);store.set('qwenPreds',S.qwenPreds);
+    const ms=Math.round(performance.now()-t0);const u=data.usage||{};const pr=PROVIDERS[S.brain.provider]||PROVIDERS.custom;
+    const cost=((u.prompt_tokens||0)*pr.in+(u.completion_tokens||0)*pr.out)/1e6;
+    S.brain.last={time:Date.now(),pt:u.prompt_tokens||0,ct:u.completion_tokens||0,cost,ms,model:S.brain.model};store.set('brainLast',S.brain.last);
+    $('brStatus').textContent='✓ 完成:'+S.qwenPreds.length+' 則預測 · '+(u.prompt_tokens||0)+'+'+(u.completion_tokens||0)+' tokens · 約 $'+cost.toFixed(4)+' · '+ms+'ms';
+    $('brOut').textContent=txt||'(空白)';
+    if(S.brain.mode==='rule'){S.brain.mode='hybrid';setSeg('brMode','m','hybrid');$('statMode').textContent='混合'}
+    generateActive();renderActive();renderBrain();
+    toast('Qwen4-Max 已給出 '+S.qwenPreds.length+' 則判斷','ok');
+  }catch(e){
+    $('brStatus').textContent='✗ 失敗:'+e.message;
+    toast('Qwen 呼叫失敗(會維持規則預測):'+e.message,'err');
+  }
+  clearTimeout(timer);S.brain.busy=false;$('btnBrain').disabled=false;
+}
+
+/* ---- render ---- */
+function srcClass(s){return s==='Qwen'?'qwen':s==='混合'?'hybrid':''}
+function renderActive(){
+  const g=$('predGrid');$('statActive').textContent=S.active.length;
+  if(!S.active.length){g.innerHTML='<div class="empty">'+(S.brain.mode==='rule'?'目前沒有達門檻的規則訊號。调低「最低信心度」或按「重新產生」。':'尚未有 Qwen 預測。到「判斷大腦」填金鑰並按「讓 Qwen4-Max 判斷」。')+'</div>';return}
+  g.innerHTML=S.active.map((p,i)=>{
+    const cur=closeOf(p.sym)||p.entry;const sign=p.dir==='看多'?1:-1;const pnl=(cur/p.entry-1)*sign*100;
+    const daysLeft=Math.max(0,Math.ceil((p.verifyBy-Date.now())/864e5));const pc=p.dir==='看多'?gainC():lossC();
+    return '<div class="pred" data-id="'+p.id+'" style="--pc:'+pc+';animation-delay:'+Math.min(i*50,300)+'ms">'
+      +'<div class="top"><span class="nm">'+esc(p.name)+'</span><span class="badges"><span class="srcbadge '+srcClass(p.source)+'">'+p.source+'</span><span class="dirbadge '+(p.dir==='看多'?'long':'short')+'">'+(p.dir==='看多'?'▲ 看多':'▼ 看空')+'</span></span></div>'
+      +'<div class="thesis">'+esc(p.thesis)+'</div>'
+      +'<div class="nums"><span class="pnl" style="color:'+(pnl>=0?gainC():lossC())+'">'+pct(pnl)+'</span><span class="entry">進場 '+fmtN(p.entry,2)+'<br>現價 '+fmtN(cur,2)+'</span></div>'
+      +'<div class="confrow"><div class="conftrack"><div class="conffill" style="width:'+(p.conf*100)+'%"></div></div><span class="confval">'+p.conf.toFixed(2)+'</span></div>'
+      +'<div class="foot"><span>'+p.hor+' 日驗證</span><span>倒數 '+daysLeft+' 天</span></div></div>';
+  }).join('');
+}
+const ENG_COLS=[['name','品種'],['comp','綜合分數'],['dir','方向'],['conf','信心'],['news','新聞'],['mom','動能'],['sent','情緒'],['turn','資金']];
+function sigCell(v){const w=Math.abs(v)*50;const left=v>=0?50:50-w;const col=v>=0?gainC():lossC();return '<span class="sigbar"><i style="left:'+left+'%;width:'+w+'%;background:'+col+'"></i></span>'}
+function renderEngine(){
+  $('engHead').innerHTML='<tr>'+ENG_COLS.map(([k,l])=>'<th class="'+(['comp','conf','news','mom','sent','turn'].includes(k)?'num':'')+'" data-k="'+k+'">'+l+(S.sort===k?'<span class="arr">▼</span>':'')+'</th>').join('')+'</tr>';
+  let rows=S.signals.filter(x=>(S.dir==='all'||x.dir===S.dir)&&(!S.q||x.name.toLowerCase().includes(S.q.toLowerCase())||x.sym.toLowerCase().includes(S.q.toLowerCase())));
+  rows.sort((a,b)=>S.sort==='name'?a.name.localeCompare(b.name):S.sort==='comp'?Math.abs(b.comp)-Math.abs(a.comp):b.conf-a.conf);
+  $('engBody').innerHTML=rows.map(x=>'<tr data-sym="'+x.sym+'"><td>'+esc(x.name)+'</td><td class="num">'+sigCell(x.comp)+' <span style="color:'+(x.comp>=0?gainC():lossC())+'">'+x.comp.toFixed(2)+'</span></td><td class="'+(x.dir==='看多'?'up':'down')+'">'+x.dir+'</td><td class="num">'+x.conf.toFixed(2)+'</td><td class="num">'+x.parts.news.toFixed(2)+'</td><td class="num">'+x.parts.mom.toFixed(2)+'</td><td class="num">'+x.parts.sent.toFixed(2)+'</td><td class="num">'+x.parts.turn.toFixed(2)+'</td></tr>').join('');
+}
+function renderScore(){
+  const st=backtestStats();$('statHit').textContent=st.rate+'%';$('statAvg').textContent=pct(st.avg);
+  $('scoreStats').innerHTML='<div class="lstat"><div class="l">命中率</div><div class="v" style="color:'+(st.rate>=50?'var(--gain)':'var(--loss)')+'">'+st.rate+'%</div></div><div class="lstat"><div class="l">平均報酬</div><div class="v" style="color:'+(st.avg>=0?'var(--gain)':'var(--loss)')+'">'+pct(st.avg)+'</div></div><div class="lstat"><div class="l">看多 / 看空</div><div class="v" style="color:var(--blue)">'+st.longN+' / '+st.shortN+'</div></div><div class="lstat"><div class="l">驗證天數</div><div class="v" style="color:var(--gold)">'+S.hor+' 日</div></div>';
+  let rows=S.backtest.filter(x=>(S.scoreFilter==='all'||(S.scoreFilter==='hit')===x.hit)&&(S.scoreDir==='all'||x.dir===+S.scoreDir));
+  $('scoreCount').textContent=rows.length+' / '+S.backtest.length+' 筆';
+  $('scoreHead').innerHTML='<tr><th>日期</th><th>品種</th><th>方向</th><th class="num">信心</th><th class="num">進場</th><th class="num">出場</th><th class="num">報酬</th><th>結果</th></tr>';
+  $('scoreBody').innerHTML=rows.slice(-300).reverse().map(x=>'<tr data-sym="'+x.sym+'"><td class="num" style="color:var(--dim)">'+new Date(x.date).toLocaleDateString('zh-TW')+'</td><td>'+esc(x.name)+'</td><td class="'+(x.dir>0?'up':'down')+'">'+(x.dir>0?'看多':'看空')+'</td><td class="num">'+x.conf.toFixed(2)+'</td><td class="num">'+fmtN(x.entry,2)+'</td><td class="num">'+fmtN(x.exit,2)+'</td><td class="num" style="color:'+(x.ret>=0?gainC():lossC())+'">'+pct(x.ret)+'</td><td>'+(x.hit?'<span class="hit-y">✓ 命中</span>':'<span class="hit-n">✗ 未中</span>')+'</td></tr>').join('')||'<tr><td colspan="8" style="color:var(--dim);padding:18px">這個篩選下沒有紀錄</td></tr>';
+  drawEquity(rows);
+}
+function drawEquity(rows){const{ctx,w,h}=fit($('eq'));ctx.clearRect(0,0,w,h);
+  const sorted=rows.slice().sort((a,b)=>a.date-b.date);
+  if(!sorted.length){ctx.fillStyle='#5d6b8f';ctx.font='13px sans-serif';ctx.fillText('無資料',20,30);return}
+  let cum=0;const pts=sorted.map(x=>{cum+=x.ret;return cum});
+  const lo=Math.min(0,...pts),hi=Math.max(0,...pts);const span=(hi-lo)||1;
+  const X=i=>8+(w-16)*i/(pts.length-1||1),Y=v=>10+(h-24)*(1-(v-lo)/span);
+  ctx.strokeStyle='rgba(147,161,196,.15)';ctx.beginPath();ctx.moveTo(8,Y(0));ctx.lineTo(w-8,Y(0));ctx.stroke();
+  ctx.beginPath();pts.forEach((v,i)=>{i?ctx.lineTo(X(i),Y(v)):ctx.moveTo(X(i),Y(v))});
+  const last=pts[pts.length-1];ctx.strokeStyle=last>=0?gainC():lossC();ctx.lineWidth=2;ctx.stroke();
+  ctx.lineTo(X(pts.length-1),Y(0));ctx.lineTo(X(0),Y(0));ctx.closePath();ctx.fillStyle=last>=0?'rgba(255,59,92,.1)':'rgba(0,214,143,.1)';ctx.fill();
+  ctx.fillStyle='#93a1c4';ctx.font='11px "IBM Plex Mono",monospace';ctx.fillText('累計 '+pct(last),10,16)}
+function drawMini(cv,pts,entry){const{ctx,w,h}=fit(cv);ctx.clearRect(0,0,w,h);if(!pts.length)return;
+  const cs=pts.map(p=>p.c);const lo=Math.min(...cs),hi=Math.max(...cs);const span=(hi-lo)||1;
+  const X=i=>4+(w-8)*i/(pts.length-1||1),Y=v=>6+(h-14)*(1-(v-lo)/span);
+  ctx.beginPath();cs.forEach((v,i)=>{i?ctx.lineTo(X(i),Y(v)):ctx.moveTo(X(i),Y(v))});ctx.strokeStyle='#3d9bff';ctx.lineWidth=1.8;ctx.stroke();
+  if(entry!=null){ctx.strokeStyle='rgba(255,176,32,.7)';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(4,Y(entry));ctx.lineTo(w-4,Y(entry));ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#ffb020';ctx.font='10px monospace';ctx.fillText('進場 '+fmtN(entry,2),6,Y(entry)-4)}}
+function renderBrain(){
+  $('statMode').textContent=S.brain.mode==='rule'?'規則':S.brain.mode==='qwen'?'Qwen':'混合';
+  $('brPreds').innerHTML=S.qwenPreds.length?S.qwenPreds.map(p=>'<tr><td>'+esc(symName(p.symbol))+'</td><td class="'+(p.dir==='看多'?'up':'down')+'">'+p.dir+'</td><td class="num">'+p.conf.toFixed(2)+'</td><td class="num">'+p.hor+'</td><td style="max-width:220px;overflow:hidden;text-overflow:ellipsis">'+esc(p.thesis)+'</td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;color:var(--gold)">'+esc(p.risk)+'</td></tr>').join(''):'<tr><td colspan="6" style="color:var(--dim);padding:16px">尚未有 Qwen 預測</td></tr>';
+  const tr=S.tracked;const q=tr.filter(x=>x.source==='Qwen'||x.source==='混合');const r=tr.filter(x=>x.source==='規則');
+  const stat=a=>{const n=a.length;const h=a.filter(x=>x.hit).length;return{n,rate:n?Math.round(h/n*100):0,avg:n?avg(a.map(x=>x.ret)):0}};
+  const qs=stat(q),rs=stat(r),all=stat(tr);
+  $('trackStats').innerHTML='<div class="lstat"><div class="l">Qwen/混合 命中率</div><div class="v" style="color:var(--mag)">'+(qs.n?qs.rate+'%':'—')+'</div></div><div class="lstat"><div class="l">規則 命中率</div><div class="v" style="color:var(--blue)">'+(rs.n?rs.rate+'%':'—')+'</div></div><div class="lstat"><div class="l">實戰已驗證</div><div class="v" style="color:var(--gold)">'+all.n+'</div></div><div class="lstat"><div class="l">實戰平均報酬</div><div class="v" style="color:'+(all.avg>=0?'var(--gain)':'var(--loss)')+'">'+(all.n?pct(all.avg):'—')+'</div></div>';
+}
+function renderFresh(){$('fresh').textContent=(S.lastFresh||new Date()).toLocaleString('zh-TW',{timeZone:'Asia/Taipei',hour12:false})+(S.source==='demo'?'(示範)':'(真實管線)');
+  const b=$('srcBadge');b.className='badge '+(S.source==='live'?'live':'demo');$('srcText').textContent=S.source==='live'?'已連線 · '+S.liveCount+' 項':'示範資料'}
+function renderAll(){renderActive();renderEngine();renderScore();renderBrain();renderFresh()}
+function rebuildSignals(){buildSignals();runBacktest()}
+function regenerate(){rebuildSignals();generateActive();S.lastFresh=new Date();renderAll();if($('brAuto').checked&&S.brain.mode!=='rule'&&S.brain.key)callQwen()}
+
+/* ---- drawer ---- */
+function openDrawer(sym){
+  const sig=S.signals.find(x=>x.sym===sym);const act=S.active.find(a=>a.sym===sym);
+  const name=symName(sym);$('dwTitle').textContent=name;
+  $('dwSub').textContent=sym+(sig?' · 規則綜合 '+sig.comp.toFixed(2):'')+(act?' · '+act.source+' '+act.dir:'');
+  $('dwThesis').textContent='核心論點:'+(act?act.thesis:(sig?sig.thesis:'—'));
+  $('dwRisk').textContent=act&&act.risk?'⚠ 主要風險:'+act.risk:'';
+  const parts=sig?sig.parts:(act?act.parts:{news:0,mom:0,sent:0,turn:0});
+  const P=[['新聞事件',parts.news],['價格動能',parts.mom],['PTT 情緒',parts.sent],['資金流向',parts.turn]];
+  $('dwParts').innerHTML=P.map(([l,v])=>{const w=Math.abs(v)*50;const left=v>=0?50:50-w;const col=v>=0?gainC():lossC();return '<div class="part"><span class="pl">'+l+'</span><span class="track"><i style="left:'+left+'%;width:'+w+'%;background:'+col+'"></i></span><span class="pv" style="color:'+col+'">'+v.toFixed(2)+'</span></div>'}).join('');
+  $('dwMeta').innerHTML=act?'<div class="part"><span class="pl">進場價</span><span></span><span class="pv">'+fmtN(act.entry,2)+'</span></div><div class="part"><span class="pl">驗證期限</span><span></span><span class="pv">'+new Date(act.verifyBy).toLocaleDateString('zh-TW')+'</span></div>':'';
+  $('scrim').classList.add('show');$('drawer').classList.add('show');S.drawer=sym;
+  requestAnimationFrame(()=>{drawMini($('dwCv'),(S.series[sym]||[]).slice(-180),act?act.entry:null);$('dwClose').focus()});
+}
+function closeDrawer(){$('scrim').classList.remove('show');$('drawer').classList.remove('show');S.drawer=null}
+
+/* ---- data ---- */
+function seedDemo(){
+  SYMBOLS.forEach(m=>{S.series[m.s]=genSeries(m.s,m)});
+  S.news=NEWS_SEED.map(([t,topic,src,h])=>({title:t,topic,source:src,t:Date.now()-h*36e5,importance:scoreText(t),link:gnews(t)}));
+  S.ptt=PTT_SEED.map(([t,nrec,a,h])=>({title:t,nrec,nrec_num:parseNrec(nrec),author:a,t:Date.now()-h*36e5}));
+  S.rank=RANK_SEED.map(([code,name,close,value,chg])=>({code,name,close,value,chg}));
+}
+async function fetchJSON(u){const c=new AbortController();const t=setTimeout(()=>c.abort(),12000);try{const r=await fetch(u,{cache:'no-store',signal:c.signal});if(!r.ok)throw new Error(r.status);return await r.json()}finally{clearTimeout(t)}}
+function monthKeys(n){const d=new Date();let y=d.getFullYear(),m=d.getMonth()+1;const o=[];for(let i=0;i<n;i++){o.push(''+y+String(m).padStart(2,'0'));m--;if(m===0){y--;m=12}}return o}
+async function connect(){
+  const owner=$('ghOwner').value.trim(),repo=$('ghRepo').value.trim()||'mkt-dashboard';
+  if(!owner){$('connMsg').textContent='請填 GitHub 帳號';return}
+  S.repo={owner,name:repo};store.set('repo',S.repo);$('connMsg').textContent='連線中…';$('btnConnect').disabled=true;
+  const base='https://raw.githubusercontent.com/'+owner+'/'+repo+'/data/';let ok=0,fail=0;
+  try{await fetchJSON(base+'meta/status.json');ok++}catch(e){fail++}
+  let hp=null;try{hp=await import('https://cdn.jsdelivr.net/npm/hyparquet@1/+esm')}catch(e){}
+  if(hp){
+    for(const sym of PRED_SYMS){try{const buf=await hp.asyncBufferFromUrl({url:base+'prices/'+safeSym(sym)+'.parquet'});const rows=await hp.parquetRead({file:buf});
+      const pts=rows.map(r=>({t:toDate(r.Date),o:+r.Open,h:+r.High,l:+r.Low,c:+r.Close,v:+r.Volume||0})).filter(p=>isFinite(p.c)&&p.c>0&&!isNaN(p.t)).sort((a,b)=>a.t-b.t);
+      if(pts.length>60){S.series[sym]=pts;ok++}else fail++}catch(e){fail++}}
+    try{let all=[];for(const m of monthKeys(2)){try{const buf=await hp.asyncBufferFromUrl({url:base+'news/news_'+m+'.parquet'});all=all.concat(await hp.parquetRead({file:buf}))}catch(e){}}
+      if(all.length){const seen=new Set();S.news=all.filter(r=>{if(seen.has(r.link))return false;seen.add(r.link);return true}).map(r=>({title:String(r.title||''),topic:String(r.topic||''),source:String(r.source||''),t:Date.parse(r.published)||Date.now(),importance:+r.importance||scoreText(r.title),link:String(r.link||gnews(r.title))}));ok++}}catch(e){}
+    try{let all=[];for(const m of monthKeys(2)){try{const buf=await hp.asyncBufferFromUrl({url:base+'ptt/ptt_'+m+'.parquet'});all=all.concat(await hp.parquetRead({file:buf}))}catch(e){}}
+      if(all.length){const seen=new Set();S.ptt=all.filter(r=>{if(seen.has(r.link))return false;seen.add(r.link);return true}).map(r=>({title:String(r.title||''),nrec:String(r.nrec||'0'),nrec_num:+r.nrec_num||parseNrec(r.nrec),author:String(r.author||''),t:Date.parse(r.posted)||Date.now()}));ok++}}catch(e){}
+    try{const st=await fetchJSON(base+'meta/status.json');if(st.twse_date){const buf=await hp.asyncBufferFromUrl({url:base+'twse/stocks_'+st.twse_date+'.parquet'});const rows=await hp.parquetRead({file:buf});
+      S.rank=rows.filter(r=>r.TradeValue>0).map(r=>({code:String(r.Code),name:String(r.Name),close:+r.ClosingPrice||0,value:(+r.TradeValue||0)/1e8,chg:0})).sort((a,b)=>b.value-a.value).slice(0,40);if(S.rank.length)ok++}}catch(e){}
+  }
+  $('btnConnect').disabled=false;
+  if(ok>0){S.source='live';S.liveCount=ok;$('connMsg').textContent='連線成功:'+ok+' 項'+(fail?', '+fail+' 項維持示範':'');toast('已連線,引擎用真實資料','ok')}
+  else{S.source='demo';$('connMsg').textContent='連線失敗,使用示範資料';toast('連線失敗,使用示範資料','warn')}
+  rebuildSignals();if(!S.active.length)generateActive();S.lastFresh=new Date();renderAll();
+}
+
+/* ---- clock / init ---- */
+function tickClock(){$('clock').textContent=new Date().toLocaleTimeString('zh-TW',{timeZone:'Asia/Taipei',hour12:false});
+  try{const p=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Taipei',weekday:'short',hour:'2-digit',minute:'2-digit',month:'2-digit',hour12:false}).formatToParts(new Date()).map(x=>[x.type,x.value]));
+    const mins=(+p.hour%24)*60+ +p.minute;let s='盤後時段';
+    if(p.weekday==='Sat'||p.weekday==='Sun')s='週末休市';else if(mins>=540&&mins<=810)s='台股盤中';
+    else{const w=[11,12,1,2,3].includes(+p.month);if(mins>=(w?1350:1290)||mins<=(w?300:240))s='美股盤中'}
+    $('session').textContent=s}catch(e){}}
+function setNavH(){document.documentElement.style.setProperty('--navh',$('nav').offsetHeight+'px')}
+function applyBrainCfg(){const b=S.brain;$('brProvider').value=b.provider;$('brModel').value=b.model;$('brBase').value=b.base;$('brKey').value=b.key||'';setSeg('brMode','m',b.mode)}
+function init(){
+  S.conv=store.get('conv','tw');S.repo=store.get('repo',S.repo);
+  const bc=store.get('brain',null);if(bc)Object.assign(S.brain,bc);S.brain.busy=false;
+  S.brain.last=store.get('brainLast',null);
+  document.documentElement.dataset.conv=S.conv;$('btnConv').textContent=S.conv==='tw'?'紅漲綠跌':'綠漲紅跌';
+  $('ghOwner').value=S.repo.owner;$('ghRepo').value=S.repo.name;
+  seedDemo();rebuildSignals();
+  S.tracked=store.get('tracked',[]);S.qwenPreds=store.get('qwenPreds',[]);
+  verifyMatured();
+  if(!S.active.length)generateActive();
+  applyBrainCfg();renderAll();
+  if(S.brain.last)$('brStatus').textContent='上次呼叫:'+S.brain.last.model+' · '+(S.brain.last.pt+S.brain.last.ct)+' tokens · 約 $'+S.brain.last.cost.toFixed(4);
+  setNavH();window.addEventListener('resize',setNavH);
+  const links=[...document.querySelectorAll('#navLinks a')];
+  if('IntersectionObserver' in window){
+    const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)links.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id))}),{rootMargin:'-35% 0px -55% 0px'});
+    document.querySelectorAll('main section').forEach(s=>io.observe(s));
+    const ro=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');ro.unobserve(e.target)}}),{threshold:.06});
+    document.querySelectorAll('.reveal').forEach(el=>ro.observe(el));
+  }else document.querySelectorAll('.reveal').forEach(el=>el.classList.add('in'));
+  $('ctlConf').addEventListener('input',e=>{S.conf=+e.target.value;$('confVal').textContent=S.conf.toFixed(2);generateActive();renderActive()});
+  $('ctlHor').addEventListener('change',e=>{S.hor=+e.target.value;generateActive();runBacktest();renderActive();renderScore()});
+  wireSeg('ctlDir',d=>{S.dir=d.d;generateActive();renderActive();renderEngine()});
+  wireSeg('ctlSort',d=>{S.sort=d.s;renderEngine()});
+  $('ctlQ').addEventListener('input',e=>{S.q=e.target.value;renderEngine()});
+  $('btnRegen').onclick=$('btnRegen2').onclick=()=>{regenerate();toast('已重新產生訊號','ok')};
+  $('btnCsv').onclick=()=>{download('signals.csv','symbol,name,direction,confidence,composite,news,momentum,sentiment,turnover\n'+S.signals.map(x=>[x.sym,'"'+x.name+'"',x.dir,x.conf.toFixed(3),x.comp.toFixed(3),x.parts.news.toFixed(3),x.parts.mom.toFixed(3),x.parts.sent.toFixed(3),x.parts.turn.toFixed(3)].join(',')).join('\n'));toast('已匯出訊號 CSV','ok')};
+  $('engHead').addEventListener('click',e=>{const th=e.target.closest('th');if(!th||!th.dataset.k)return;S.sort=th.dataset.k==='conf'?'conf':th.dataset.k==='comp'?'comp':'name';renderEngine()});
+  $('engBody').addEventListener('click',e=>{const tr=e.target.closest('tr');if(tr)openDrawer(tr.dataset.sym)});
+  $('predGrid').addEventListener('click',e=>{const c=e.target.closest('.pred');if(!c)return;const p=S.active.find(x=>x.id===c.dataset.id);if(p)openDrawer(p.sym)});
+  wireSeg('scoreFilter',d=>{S.scoreFilter=d.f;renderScore()});
+  wireSeg('scoreDir',d=>{S.scoreDir=d.d;renderScore()});
+  $('scoreBody').addEventListener('click',e=>{const tr=e.target.closest('tr');if(tr&&tr.dataset.sym)openDrawer(tr.dataset.sym)});
+  $('btnScoreCsv').onclick=()=>{download('report_card.csv','date,symbol,direction,confidence,entry,exit,return_pct,hit\n'+S.backtest.map(x=>[new Date(x.date).toISOString().slice(0,10),x.sym,x.dir>0?'long':'short',x.conf.toFixed(3),x.entry.toFixed(4),x.exit.toFixed(4),x.ret.toFixed(3),x.hit?1:0].join(',')).join('\n'));toast('已匯出成績單 CSV','ok')};
+  /* brain */
+  $('brProvider').addEventListener('change',e=>{const p=e.target.value;S.brain.provider=p;const pr=PROVIDERS[p];if(pr&&p!=='custom'){$('brBase').value=pr.base;$('brModel').value=pr.model;S.brain.base=pr.base;S.brain.model=pr.model}store.set('brain',{provider:S.brain.provider,model:$('brModel').value,base:$('brBase').value,key:$('brKey').value,mode:S.brain.mode})});
+  $('brModel').addEventListener('change',e=>{S.brain.model=e.target.value.trim()});
+  $('brBase').addEventListener('change',e=>{S.brain.base=e.target.value.trim()});
+  $('brKeyToggle').onclick=()=>{const k=$('brKey');k.type=k.type==='password'?'text':'password';$('brKeyToggle').textContent=k.type==='password'?'顯示':'隱藏'};
+  wireSeg('brMode',d=>{S.brain.mode=d.m;store.set('brain',{provider:S.brain.provider,model:$('brModel').value,base:$('brBase').value,key:$('brKey').value,mode:S.brain.mode});
+    if(S.brain.mode!=='rule'&&!S.qwenPreds.length)toast('尚未有 Qwen 預測,請先按「讓 Qwen4-Max 判斷」','warn');
+    generateActive();renderActive();renderBrain()});
+  $('btnBrain').onclick=callQwen;
+  $('dwClose').onclick=closeDrawer;$('scrim').onclick=closeDrawer;
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawer();$('settings').classList.remove('show')}});
+  $('btnConv').onclick=()=>{S.conv=S.conv==='tw'?'intl':'tw';store.set('conv',S.conv);document.documentElement.dataset.conv=S.conv;$('btnConv').textContent=S.conv==='tw'?'紅漲綠跌':'綠漲紅跌';renderAll()};
+  $('btnSettings').onclick=()=>$('settings').classList.toggle('show');
+  $('btnConnect').onclick=connect;
+  $('btnDisconnect').onclick=()=>{S.source='demo';S.liveCount=0;seedDemo();rebuildSignals();if(!S.active.length)generateActive();S.lastFresh=new Date();renderAll();$('connMsg').textContent='已斷開,使用示範資料';toast('已斷開','warn')};
+  if('ResizeObserver' in window){new ResizeObserver(()=>{renderScore();if(S.drawer)drawMini($('dwCv'),(S.series[S.drawer]||[]).slice(-180))}).observe($('eq').parentElement)}
+  tickClock();setInterval(tickClock,1000);
+  setInterval(()=>{if(S.source==='demo'){SYMBOLS.forEach(m=>{const pts=S.series[m.s];if(!pts.length)return;const r=mulberry32((Date.now()/1000|0)+hashStr(m.s));const last=pts[pts.length-1];last.c=Math.max(last.c*(1+gauss(r)*m.vol*.1),m.base*.2);last.h=Math.max(last.h,last.c);last.l=Math.min(last.l,last.c)});renderActive()}},15000);
+  connect();
+}
+if(typeof document!=='undefined'){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init()}
+</script>
+</body>
+</html>
