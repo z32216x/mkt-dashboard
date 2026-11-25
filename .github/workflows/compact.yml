@@ -1,0 +1,33 @@
+name: compact-data   # 每月把 data 分支壓縮成單一提交,避免 repo 歷史無限變肥
+
+on:
+  schedule:
+    - cron: "0 22 1 * *"   # 每月 1 號 22:00 UTC(台北 2 號早上 06:00)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: collect-data
+  cancel-in-progress: false
+
+jobs:
+  compact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: data
+          fetch-depth: 1
+      - name: Rebuild data branch as single commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout --orphan new-data
+          git add -A
+          git commit -m "compact $(date -u +%F)"
+          git branch -D data
+          git branch -m data
+          git push -f origin data
