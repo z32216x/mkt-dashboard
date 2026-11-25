@@ -114,7 +114,7 @@ small.dim{color:var(--dim);font-size:12px}
   <button class="btn" id="btnSettings">⚙ 設定</button>
 </div></nav>
 <main>
-<div class="warn">⚠️ <b>安全提醒:</b>你之前在對話中貼過 API Key,請到 <b>aistudio.google.com</b> 撤銷並重新產生一把 <b>AIza 開頭</b>的新 key。新 key 只在下面「設定」輸入,只存在你的瀏覽器,<b>不要再貼給任何人</b>。</div>
+<div class="warn">⚠️ <b>安全提醒:</b>你之前在對話中貼過 API Key,請到 <b>aistudio.google.com</b> 撤銷並重新產生一把新 key。新 key 只在下面「設定」輸入,只存在你的瀏覽器,<b>不要再貼給任何人</b>。</div>
 
 <section id="market" style="--acc:var(--blue)">
   <div class="kicker">Live Market</div><h2>即時行情(點卡片選擇預測標的)</h2>
@@ -180,9 +180,9 @@ small.dim{color:var(--dim);font-size:12px}
 
 <div id="settings">
   <h3 style="margin-bottom:6px">⚙ 設定</h3>
-  <p style="font-size:12px;color:var(--dim);margin-bottom:14px">Gemini Key 只存在你的瀏覽器。請用 <b>AIza 開頭</b>的新 key(舊的已洩漏請撤銷)。</p>
+  <p style="font-size:12px;color:var(--dim);margin-bottom:14px">Gemini Key 只存在你的瀏覽器,不會上傳。貼上後按儲存,會自動幫你確認有沒有效。(舊 key 已在對話洩漏,請到 AI Studio 撤銷重發)</p>
   <div class="field"><label>Google Gemini API Key</label>
-    <div style="display:flex;gap:8px"><input id="keyInput" type="password" placeholder="AIza..."><button class="btn" id="btnShow">👁</button></div>
+    <div style="display:flex;gap:8px"><input id="keyInput" type="password" placeholder="貼上你的 key"><button class="btn" id="btnShow">👁</button></div>
   </div>
   <div class="toolbar"><button class="btn pri" id="btnSaveKey">儲存 Key</button><button class="btn danger" id="btnClearKey">清除</button></div>
   <hr style="border-color:var(--line);margin:14px 0">
@@ -234,7 +234,6 @@ function genSeries(sym){
 function getSeries(sym){if(!S.series[sym])S.series[sym]=genSeries(sym);return S.series[sym]}
 function seedNews(){const t=['台積電法說報喜','Fed 暗示降息','AI 需求強勁','台幣升破 30.5','油價回落','費半創新高','外資買超','避險買盤增溫'];S.news=t.map((x,i)=>({title:x,t:Date.now()-i*36e5,heat:4+((i*37)%6)}))}
 
-/* ---------- charts ---------- */
 function fit(cv){const r=cv.getBoundingClientRect();const dpr=Math.min(2,devicePixelRatio||1);cv.width=Math.max(1,Math.round(r.width*dpr));cv.height=Math.max(1,Math.round(cv.getAttribute('height')*dpr));cv.style.height=cv.getAttribute('height')+'px';const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);return{ctx,w:r.width,h:parseInt(cv.getAttribute('height'))}}
 function drawPrice(){
  const cv=$('priceCv');const{ctx,w,h}=fit(cv);ctx.clearRect(0,0,w,h);
@@ -274,7 +273,6 @@ function drawEquity(eq,dd){
  ctx.fillText('回撤 '+mdd.toFixed(1)+'%',10,botY-4);
 }
 
-/* ---------- render ---------- */
 function renderCards(){
  const box=$('cards');box.innerHTML='';
  Object.keys(KNOWN).forEach(sym=>{
@@ -313,7 +311,6 @@ function renderLeader(){
   '<td class="num">'+pct(r.avg)+'</td><td class="num">'+pct(r.sum)+'</td></tr>').join('')||'<tr><td colspan="6" style="color:var(--dim)">還沒有預測</td></tr>';
 }
 function renderPreds(){
- const now=Date.now();
  $('predBody').innerHTML=S.preds.slice().reverse().map(p=>{
   const cur=getSeries(p.sym).pts.slice(-1)[0].c;
   const live=(p.dir==='看多'?cur/p.entry-1:p.entry/cur-1)*100;
@@ -332,7 +329,6 @@ function renderPreds(){
 function renderAll(){renderCards();renderMarket();renderPreds();$('modelTag').textContent='模型:'+(S.key?'Gemini 2.0 Flash':'示範模式')}
 function save(){store.set('preds',S.preds)}
 
-/* ---------- Gemini ---------- */
 const geminiURL=k=>'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+k;
 async function callGemini(prompt){
  const r=await fetch(geminiURL(S.key),{method:'POST',headers:{'Content-Type':'application/json'},
@@ -351,7 +347,7 @@ function feat(sym){
 }
 async function predict(sym){
  const f=feat(sym);
- if(!S.key){return{direction:f.mom>=0?'看多':'看空',confidence:.6,horizon:5,expected:+ (f.mom*.3).toFixed(2),reason:'示範:依動能與量能規則',model:'示範規則'}}
+ if(!S.key){return{direction:f.mom>=0?'看多':'看空',confidence:.6,horizon:5,expected:+(f.mom*.3).toFixed(2),reason:'示範:依動能與量能規則',model:'示範規則'}}
  const prompt='你是台股分析師。依下列數據給單一 JSON 預測,只回傳 JSON,不要其他文字。'+
  '數據:'+JSON.stringify(f)+
  ' 回傳格式:{"direction":"看多或看空","confidence":0到1,"expected":預估報酬百分比數字,"reason":"15字內理由"}';
@@ -376,7 +372,6 @@ function showPred(p,sym,name){
  };
 }
 
-/* ---------- tick & close ---------- */
 function tick(){
  const rng=mulberry32((Date.now()/1000|0));
  Object.keys(S.series).forEach(sym=>{const{pts}=S.series[sym];const last=pts[pts.length-1];const m=meta(sym);last.c=Math.max(last.c*(1+gauss(rng)*m.vol*.1),m.base*.2);last.h=Math.max(last.h,last.c);last.l=Math.min(last.l,last.c)});
@@ -393,7 +388,6 @@ function tick(){
 }
 setInterval(tick,1000);
 
-/* ---------- backtest ---------- */
 function signals(sym,win,hold){
  const{pts,heat}=getSeries(sym);const c=pts.map(p=>p.c),v=pts.map(p=>p.v);const out=[];
  for(let i=win;i<pts.length-hold;i++){
@@ -433,7 +427,6 @@ async function runBacktest(){
  drawEquity(curve,dd);$('btnBacktest').disabled=false;
 }
 
-/* ---------- GitHub connect (optional real data) ---------- */
 async function connectGH(){
  const owner=$('ghOwner').value.trim(),repo=$('ghRepo').value.trim()||'mkt-dashboard';
  if(!owner){$('connMsg').textContent='請填 GitHub 帳號';return}
@@ -447,7 +440,6 @@ async function connectGH(){
  }catch(e){S.connected=false;$('connText').textContent='未連線';$('connMsg').textContent='連線失敗,維持示範資料('+e.message+')';toast('連線失敗,維持示範','err')}
 }
 
-/* ---------- events ---------- */
 $('btnPredict').onclick=async()=>{
  const sym=$('pSym').value.trim().toUpperCase();const name=$('pName').value.trim();
  if(!sym){toast('請輸入代號','warn');return}
@@ -462,7 +454,19 @@ $('btnBacktest').onclick=runBacktest;
 $('btnRefresh').onclick=()=>{tick();toast('已更新','ok')};
 $('btnSettings').onclick=()=>$('settings').classList.toggle('show');
 $('btnShow').onclick=()=>{const i=$('keyInput');i.type=i.type==='password'?'text':'password'};
-$('btnSaveKey').onclick=()=>{const k=$('keyInput').value.trim();if(!k){toast('請輸入 key','warn');return}if(!k.startsWith('AIza'))toast('這把不像標準 Gemini key(應為 AIza 開頭),請確認','warn');S.key=k;store.set('key',k);toast('已儲存(只存在你的瀏覽器)','ok');renderAll()};
+$('btnSaveKey').onclick=()=>{
+ const k=$('keyInput').value.trim();
+ if(!k){toast('請輸入 key','warn');return}
+ S.key=k;store.set('key',k);
+ toast('已儲存,正在幫你確認…','ok');
+ renderAll();
+ fetch(geminiURL(k),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:'回傳OK'}]}]})})
+  .then(r=>{
+   if(r.ok)toast('✅ Key 已確認有效,可以使用','ok');
+   else toast('⚠️ Key 已存,但 Google 回傳 '+r.status+',預測時會自動改用示範規則','warn');
+  })
+  .catch(()=>{toast('Key 已存,但目前無法連線確認(不影響使用)','warn')});
+};
 $('btnClearKey').onclick=()=>{S.key='';store.set('key','');$('keyInput').value='';toast('已清除','warn');renderAll()};
 $('btnConn').onclick=connectGH;
 $('btnDisc').onclick=()=>{S.connected=false;$('connBadge').className='badge';$('connText').textContent='未連線';toast('已斷開','warn');renderMarket()};
@@ -474,7 +478,6 @@ $('btnCsv').onclick=()=>{
 $('btnClear').onclick=()=>{if(confirm('確定清空所有預測?')){S.preds=[];save();renderPreds()}};
 document.addEventListener('keydown',e=>{if(e.key==='Escape')$('settings').classList.remove('show')});
 
-/* ---------- init ---------- */
 function init(){
  seedNews();
  const sel=$('btSym');sel.innerHTML=Object.keys(KNOWN).map(s=>'<option value="'+s+'">'+esc(KNOWN[s].n)+'</option>').join('');
